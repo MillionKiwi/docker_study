@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 
 
@@ -16,40 +17,47 @@ public class UserController {
 
    @Autowired
    private JdbcTemplate jdbcTemplate;
+   @Autowired
+   private StringRedisTemplate redis;
 
-   @GetMapping()
-   public String home() {
-       return "home";
-   }
-   
-
-   @GetMapping("/hello")
+   @GetMapping
    public String hello() {
-       return "Hello from Spring Boot!";
+       return "Spring Boot START PAGE";
    }
 
-   @GetMapping("/db-test")
+   @GetMapping("/mysql")
    public String dbTest() {
        try {
-           String sql = "SELECT 1 + 1";
-           Integer result = jdbcTemplate.queryForObject(sql, Integer.class);
-           return "Database test successful. The result of '1 + 1' is: " + result;
+            String sql = "SELECT now()";
+            List<Map<String, Object>> result = jdbcTemplate.queryForList(sql);
+            return result.toString();
        } catch (Exception e) {
-           e.printStackTrace();
-           return "Database connection failed! Error: " + e.getMessage();
+            e.printStackTrace();
+            return "Database connection failed! Error: " + e.getMessage();
        }
    }
 
-   @GetMapping("/db-test-all")
-   public String dbTestAll() {
-       try {
-            String sql = "SELECT * from test";
-            List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
-            return rows.toString();
-       } catch (Exception e) {
-           e.printStackTrace();
-           return "Database connection failed! Error: " + e.getMessage();
-       }
-   }
+    @GetMapping("/redis-set")
+    public String redisSet() {
+        try {
+            redis.opsForValue().set("key", "100");
+            return "Redis SET OK. key=key, value=100";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Redis SET failed! Error: " + e.getMessage();
+        }
+    }
+
+    @GetMapping("/redis-get")
+    public String redisGet() {
+        try {
+            String value = redis.opsForValue().get("key");
+            return "Redis GET OK. key=key >> " + value;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Redis GET failed! Error: " + e.getMessage();
+        }
+    }
+
    
 }
